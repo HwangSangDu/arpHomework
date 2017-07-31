@@ -100,16 +100,16 @@ int main(int argc, char *argv[])
 	uint32_t arp_ip_dest;
 	//*/
 	memcpy(m_arp->eth.h_dest,"\xff\xff\xff\xff\xff\xff",6);
-	memcpy(m_arp->eth.h_source,"\x00\x50\x56\xee\x66\x9d",6);
+	memcpy(m_arp->eth.h_source,"\x00\x0c\x29\x79\xa8\x03",6);
 	m_arp->eth.h_proto = htons(ETHERTYPE_ARP);
 
 	m_arp->arp_hard_type = htons(0x0001);
 	m_arp->arp_proto_type = htons(ETHERTYPE_IP);
 	m_arp->arp_hard_size = 0x06;
 	m_arp->arp_proto_size = 0x04;
-	m_arp->arp_oper = htons(0x0010);
+	m_arp->arp_oper = htons(0x0001);
 	//temp = "\x00\x50\x56\xee\x66\x9d";
-	memcpy(m_arp->arp_eth_source ,"\x00\x50\x56\xee\x66\x9d",6);
+	memcpy(m_arp->arp_eth_source ,"\x00\x0c\x29\x79\xa8\x03",6);
 	/*
 	m_arp->arp_eth_source[0] = 0x00;
 	m_arp->arp_eth_source[1] = 0x50;
@@ -120,11 +120,11 @@ int main(int argc, char *argv[])
 	//*/
 	//memcpy(m_arp->arp_eth_source ,temp ,6);
 	//m_arp->arp_ip_source = htonl(0xc0a8ca02);
-	memcpy(m_arp->arp_ip_source , "\xc0\xa8\xca\x02",4);
+	memcpy(m_arp->arp_ip_source , "\xc0\xa8\xca\x9b",4);
 
 	memcpy (m_arp->arp_eth_dest,"\x00\x00\x00\x00\x00\x00",6);
 	//memcpy(m_arp->arp_eth_dest , temp, 6);
-	memcpy(m_arp->arp_ip_dest,"\xc0\xa8\xca\x9b",4);
+	memcpy(m_arp->arp_ip_dest,"\xc0\xa8\xca\x02",4);
 	//printf("%d",sizeof(m_arp));
 	pcap_sendpacket(handle ,(u_char *)m_arp , 42);
 
