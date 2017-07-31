@@ -12,6 +12,8 @@
 #define ETHERTYPE_ARP	0x0806		/* Addr. resolution protocol */
 //[출처] http://minirighi.sourceforge.net/html/arp_8h-source.html
 // 실제 헤더와 일치함을 알 수 있습니다.
+
+
 struct arp
 {
 	struct ethhdr eth; 
@@ -26,13 +28,13 @@ struct arp
 	//! ARP operation code (command).
 	uint16_t arp_oper;
 	//! Hardware source address.
-	uint8_t  arp_eth_source[6];
+	u_char	  arp_eth_source[6];
 	//! IP source address.
-	uint32_t arp_ip_source;
+	u_char	 arp_ip_source[4];
 	//! Hardware destination address.
-	uint8_t  arp_eth_dest[6];
+	u_char	  arp_eth_dest[6];
 	//! IP destination address.
-	uint32_t arp_ip_dest;
+	u_char	 arp_ip_dest[4];
 };
 
 
@@ -51,6 +53,7 @@ int main(int argc, char *argv[])
 	bpf_u_int32 net;		/* Our IP */
 	struct pcap_pkthdr* header;	/* The header that pcap gives us */
 	struct arp *m_arp = (struct arp *)malloc(sizeof(m_arp));
+	struct arp *recv_arp = (struct arp *)malloc(sizeof(m_arp));
 
 	const u_char *temp;
 	const u_char *packet;		/* The actual packet */
@@ -100,25 +103,30 @@ int main(int argc, char *argv[])
 	m_arp->eth.h_proto = htons(ETHERTYPE_ARP);
 
 	m_arp->arp_hard_type = htons(0x0001);
-	m_arp->arp_proto_type = htons(ETHERTYPE_ARP);
+	m_arp->arp_proto_type = htons(ETHERTYPE_IP);
 	m_arp->arp_hard_size = 0x06;
 	m_arp->arp_proto_size = 0x04;
 	m_arp->arp_oper = htons(0x0010);
 	//temp = "\x00\x50\x56\xee\x66\x9d";
-	//m_arp->arp_eth_source  = "\x00\x50\x56\xee\x66\x9d";
+	memcpy(m_arp->arp_eth_source ,"\x00\x50\x56\xee\x66\x9d",6);
+	/*
 	m_arp->arp_eth_source[0] = 0x00;
 	m_arp->arp_eth_source[1] = 0x50;
 	m_arp->arp_eth_source[2] = 0x56;
 	m_arp->arp_eth_source[3] = 0xee;
 	m_arp->arp_eth_source[4] = 0x66;
 	m_arp->arp_eth_source[5] = 0x9d;
+	//*/
 	//memcpy(m_arp->arp_eth_source ,temp ,6);
-	m_arp->arp_ip_source = htonl(0xc0a8ca02);
+	//m_arp->arp_ip_source = htonl(0xc0a8ca02);
+	memcpy(m_arp->arp_ip_source , "\xc0\xa8\xca\x02",4);
+
 	memcpy (m_arp->arp_eth_dest,"\x00\x00\x00\x00\x00\x00",6);
 	//memcpy(m_arp->arp_eth_dest , temp, 6);
 	memcpy(m_arp->arp_ip_dest,"\xc0\xa8\xca\x9b",4);
 	//printf("%d",sizeof(m_arp));
 	pcap_sendpacket(handle ,(u_char *)m_arp , 42);
+
 
 
 	printf("error\n");
@@ -127,9 +135,18 @@ int main(int argc, char *argv[])
 	{
 		if(!flag)//flag == 0 (timeout)d
 			continue;
+		
+
+		recv_arp.eth = (struct ethhdr *) packet; 
+		if(ntohs(eth>h_proto) != ETHERTYPE_ARP)
+			continue;
+		printf("DEST MAC=%s\n",ether_ntoa((struct ether_addr *) recv.eth->h_dest));
+		printf("SRC  MAC=%s\n",ether_ntoa((struct ether_addr *) recv.eth->h_source));
+		printf("PROTOCOL=%04x\n",ntohs(recv.eth->h_proto));
+
 		temp = packet + 14;
 		iphdr = (struct ip*) temp; 
-		if(iphdr->ip_p == ETHERTYPE_ARP)//ARP
+		if(iphdr->ip_p == ETHERTYPE_IP)//ARP
 			continue;
 
 		//packet = pcap_next(handle, &header);
