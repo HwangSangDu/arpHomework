@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
 	char *dev;			/* The device to sniff on */
 	char errbuf[PCAP_ERRBUF_SIZE];	/* Error string */
 	struct bpf_program fp;		/* The compiled filter */
+	struct ethhdr *ethhdr; 
 	struct ip *iphdr; 
 	char filter_exp[] = "port 80";	/* The filter expression */
 	bpf_u_int32 mask;		/* Our netmask */
@@ -129,24 +130,26 @@ int main(int argc, char *argv[])
 
 
 
-	printf("error\n");
+	
 	/* Grab a packet */
 	while((flag = pcap_next_ex(handle, &header,&packet)) >= 0)
 	{
 		if(!flag)//flag == 0 (timeout)d
 			continue;
-		
+		//recv_arp->eth = (struct ethhdr *) packet; 
+		//memcpy(&recv_arp->eth , packet , sizeof(packet));
 
-		recv_arp.eth = (struct ethhdr *) packet; 
-		if(ntohs(eth>h_proto) != ETHERTYPE_ARP)
+		ethhdr = (struct ethhdr *) packet;
+		memcpy(&recv_arp->eth , ethhdr , sizeof(packet));
+		if(ntohs(recv_arp->eth.h_proto) != ETHERTYPE_ARP)
 			continue;
-		printf("DEST MAC=%s\n",ether_ntoa((struct ether_addr *) recv.eth->h_dest));
-		printf("SRC  MAC=%s\n",ether_ntoa((struct ether_addr *) recv.eth->h_source));
-		printf("PROTOCOL=%04x\n",ntohs(recv.eth->h_proto));
+		printf("DEST MAC=%s\n",ether_ntoa((struct ether_addr *) recv_arp->eth.h_dest));
+		printf("SRC  MAC=%s\n",ether_ntoa((struct ether_addr *) recv_arp->eth.h_source));
+		printf("PROTOCOL=%04x\n",ntohs(recv_arp->eth.h_proto));
 
 		temp = packet + 14;
 		iphdr = (struct ip*) temp; 
-		if(iphdr->ip_p == ETHERTYPE_IP)//ARP
+		if(iphdr->ip_p != ETHERTYPE_IP)//ARP
 			continue;
 
 		//packet = pcap_next(handle, &header);
