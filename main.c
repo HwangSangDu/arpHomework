@@ -139,20 +139,42 @@ int main(int argc, char *argv[])
 		//recv_arp->eth = (struct ethhdr *) packet; 
 		//memcpy(&recv_arp->eth , packet , sizeof(packet));
 
-		ethhdr = (struct ethhdr *) packet;
+		recv_arp = (struct arp *) packet;
 		//memcpy(&recv_arp->eth , ethhdr , sizeof(packet));
-		recv_arp->eth = *ethhdr;
 		if(ntohs(recv_arp->eth.h_proto) != ETHERTYPE_ARP)
 			continue;
 		printf("DEST MAC=%s\n",ether_ntoa((struct ether_addr *) recv_arp->eth.h_dest));
 		printf("SRC  MAC=%s\n",ether_ntoa((struct ether_addr *) recv_arp->eth.h_source));
 		printf("PROTOCOL=%04x\n",ntohs(recv_arp->eth.h_proto));
 
+		if(recv_arp->arp_proto_type != htons(ETHERTYPE_IP))
+			continue;
+		/*
+		uint16_t arp_hard_type;
+		uint16_t arp_proto_type;
+		uint8_t  arp_hard_size;
+		uint8_t  arp_proto_size;
+		uint16_t arp_oper;
+		u_char  arp_eth_source[6];
+		u_char arp_ip_source[4];
+		u_char  arp_eth_dest[6];
+		u_char arp_ip_dest[4];
+		//*/
+		printf("Hardware Type : %04x\n",ntohs(recv_arp->arp_hard_type));
+		printf("Protocol Type : %04x\n",ntohs(recv_arp->arp_proto_type));
+		printf("Hardware Size : %02x\n",recv_arp->arp_hard_size);
+		printf("Protocol Size : %02x\n",recv_arp->arp_proto_size);
+		printf("arp Oper : %04x\n",ntohs(recv_arp->arp_oper));
+		//printf("eth source : %s\n",recv_arp->arp_eth_source);
+		//printf("ip source : %s\n",recv_arp->arp_ip_source);
+		//printf("eth destination : %s\n",recv_arp->arp_eth_dest);
+		//printf("ip destination : %s\n",recv_arp->arp_ip_dest);
+		/*
 		temp = packet + 14;
 		iphdr = (struct ip*) temp; 
 		if(iphdr->ip_p != ETHERTYPE_IP)//ARP
 			continue;
-
+		//*/
 		//packet = pcap_next(handle, &header);
 		/* Print its length */
 		printf("Jacked a packet with length of [%d]\n", header->len);
