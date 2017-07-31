@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	struct bpf_program fp;		/* The compiled filter */
 	struct ethhdr *ethhdr; 
 	struct ip *iphdr; 
-	char filter_exp[] = "port 80";	/* The filter expression */
+	char filter_exp[] = "arp";	/* The filter expression */
 	bpf_u_int32 mask;		/* Our netmask */
 	bpf_u_int32 net;		/* Our IP */
 	struct pcap_pkthdr* header;	/* The header that pcap gives us */
@@ -134,13 +134,14 @@ int main(int argc, char *argv[])
 	/* Grab a packet */
 	while((flag = pcap_next_ex(handle, &header,&packet)) >= 0)
 	{
-		if(!flag)//flag == 0 (timeout)d
+		if(!flag)//flag == 0 (timeout)
 			continue;
 		//recv_arp->eth = (struct ethhdr *) packet; 
 		//memcpy(&recv_arp->eth , packet , sizeof(packet));
 
 		ethhdr = (struct ethhdr *) packet;
-		memcpy(&recv_arp->eth , ethhdr , sizeof(packet));
+		//memcpy(&recv_arp->eth , ethhdr , sizeof(packet));
+		recv_arp->eth = *ethhdr;
 		if(ntohs(recv_arp->eth.h_proto) != ETHERTYPE_ARP)
 			continue;
 		printf("DEST MAC=%s\n",ether_ntoa((struct ether_addr *) recv_arp->eth.h_dest));
