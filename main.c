@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <netinet/ether.h>
 #define	ETHERTYPE_PUP	0x0200		/* PUP protocol */
 #define	ETHERTYPE_IP	0x0800		/* IP protocol */
 #define ETHERTYPE_ARP	0x0806		/* Addr. resolution protocol */
@@ -13,6 +14,7 @@
 // 실제 헤더와 일치함을 알 수 있습니다.
 struct arp
 {
+	struct ethhdr eth; 
 	//! Format of hardware address.
 	uint16_t arp_hard_type;
 	//! Format of protocol address.
@@ -93,24 +95,30 @@ int main(int argc, char *argv[])
 	uint8_t  arp_eth_dest[6];
 	uint32_t arp_ip_dest;
 	//*/
+	memcpy(m_arp->eth.h_dest,"\xff\xff\xff\xff\xff\xff",6);
+	memcpy(m_arp->eth.h_source,"\x00\x50\x56\xee\x66\x9d",6);
+	m_arp->eth.h_proto = htons(ETHERTYPE_ARP);
+
 	m_arp->arp_hard_type = htons(0x0001);
 	m_arp->arp_proto_type = htons(ETHERTYPE_ARP);
 	m_arp->arp_hard_size = 0x06;
-	m_arp->arp_proto_size = 0x40;
+	m_arp->arp_proto_size = 0x04;
 	m_arp->arp_oper = htons(0x0010);
-	temp = "005056ee669d";
-	for (i = (sizeof(temp) / 2) - 1 ; i >= 0; i--)
-	{
-		
-	}
-	
-	memcpy(m_arp->arp_eth_source ,temp ,6);
+	//temp = "\x00\x50\x56\xee\x66\x9d";
+	//m_arp->arp_eth_source  = "\x00\x50\x56\xee\x66\x9d";
+	m_arp->arp_eth_source[0] = 0x00;
+	m_arp->arp_eth_source[1] = 0x50;
+	m_arp->arp_eth_source[2] = 0x56;
+	m_arp->arp_eth_source[3] = 0xee;
+	m_arp->arp_eth_source[4] = 0x66;
+	m_arp->arp_eth_source[5] = 0x9d;
+	//memcpy(m_arp->arp_eth_source ,temp ,6);
 	m_arp->arp_ip_source = htonl(0xc0a8ca02);
-	temp = "000000000000";
-	memcpy(m_arp->arp_eth_dest , temp, 6);
-	m_arp->arp_ip_dest = htonl(0xc0a8ca9b);
+	memcpy (m_arp->arp_eth_dest,"\x00\x00\x00\x00\x00\x00",6);
+	//memcpy(m_arp->arp_eth_dest , temp, 6);
+	memcpy(m_arp->arp_ip_dest,"\xc0\xa8\xca\x9b",4);
 	//printf("%d",sizeof(m_arp));
-	pcap_sendpacket(handle ,(u_char *)m_arp , sizeof(m_arp));
+	pcap_sendpacket(handle ,(u_char *)m_arp , 42);
 
 
 	printf("error\n");
